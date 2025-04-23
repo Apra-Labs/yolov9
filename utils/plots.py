@@ -83,7 +83,8 @@ class Annotator:
         if self.pil or not is_ascii(label):
             self.draw.rectangle(box, width=self.lw, outline=color)  # box
             if label:
-                w, h = self.font.getsize(label)  # text width, height
+                bbox = self.font.getbbox(label)
+                w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]  # width and height
                 outside = box[1] - h >= 0  # label fits outside box
                 self.draw.rectangle(
                     (box[0], box[1] - h if outside else box[1], box[0] + w + 1,
@@ -93,6 +94,8 @@ class Annotator:
                 # self.draw.text((box[0], box[1]), label, fill=txt_color, font=self.font, anchor='ls')  # for PIL>8.0
                 self.draw.text((box[0], box[1] - h if outside else box[1]), label, fill=txt_color, font=self.font)
         else:  # cv2
+            if not self.im.flags.writeable:
+                self.im = self.im.copy()
             p1, p2 = (int(box[0]), int(box[1])), (int(box[2]), int(box[3]))
             cv2.rectangle(self.im, p1, p2, color, thickness=self.lw, lineType=cv2.LINE_AA)
             if label:
@@ -162,7 +165,7 @@ class Annotator:
     def text(self, xy, text, txt_color=(255, 255, 255), anchor='top'):
         # Add text to image (PIL-only)
         if anchor == 'bottom':  # start y from font bottom
-            w, h = self.font.getsize(text)  # text width, height
+            w, h = self.font.getbbox(text)
             xy[1] += 1 - h
         self.draw.text(xy, text, fill=txt_color, font=self.font)
 
@@ -184,6 +187,11 @@ def feature_visualization(x, module_type, stage, n=32, save_dir=Path('runs/detec
     n:              Maximum number of feature maps to plot
     save_dir:       Directory to save results
     """
+
+    # to handle both tensors and tuples
+    if isinstance(x, tuple):
+        x = x[0] # Extract the first element from the tuple if x is a tuple
+
     if 'Detect' not in module_type:
         batch, channels, height, width = x.shape  # batch, channels, height, width
         if height > 1 and width > 1:
