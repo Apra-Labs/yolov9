@@ -1,0 +1,34 @@
+lr0: 0.0025        # Lower LR for small batch size
+lrf: 0.1           # Final LR multiplier
+momentum: 0.85     # Slightly lower momentum for stability
+weight_decay: 0.0003
+warmup_epochs: 3.0
+warmup_momentum: 0.6
+warmup_bias_lr: 0.05
+
+box: 7.5
+cls: 0.5
+cls_pw: 1.0
+obj: 0.5           # Lower obj loss gain for smaller batch stability
+obj_pw: 1.0
+dfl: 1.5
+iou_t: 0.2
+anchor_t: 4.0
+
+fl_gamma: 0.0
+
+hsv_h: 0.015
+hsv_s: 0.5         # Reduced augmentation intensity
+hsv_v: 0.3
+degrees: 0.0
+translate: 0.05    # Less aggressive translation
+scale: 0.5         # Less scale jitter
+shear: 0.0
+perspective: 0.0
+flipud: 0.0
+fliplr: 0.5
+
+mosaic: 0.8        # Slightly reduced mosaic
+mixup: 0.05        # Lower mixup for small batch
+copy_paste: 0.0    # Disabled for small datasets / single image
+
