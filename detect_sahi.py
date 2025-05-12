@@ -11,6 +11,7 @@ import cv2
 from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
 from sahi.slicing import slice_image
+import json
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLO root directory
@@ -150,6 +151,8 @@ def run(
         sahi_overlap_width_ratio=0.2,  # SAHI overlap width ratio
         sahi_blob_area_threshold=0,  # minimum blob area to consider for SAHI
         use_custom_rois=False,
+        top_k=1,
+        blob_defects_info=None,
 ):
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
@@ -185,6 +188,10 @@ def run(
             device=device,
             category_mapping=category_mapping,
         )
+
+    if blob_defects_info:
+        with open(blob_defects_info, "r") as f:
+            blob_data = json.load(f)
 
     # Dataloader
     bs = 1  # batch_size
@@ -238,8 +245,18 @@ def run(
 
             det[:, :4] = scale_boxes(im.shape[2:], det[:, :4], im0.shape).round()
 
+            # Blob Data
+            if not p.name.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff')):
+                continue
+            # Extract the Index Count String from the image name (assuming format: "idx_rest.jpg")
+            idx = p.name
+            # Find the corresponding blob in the JSON data
+            blob_info = next((b for b in blob_data.get("Blobs", []) if b.get("Index Count String") == idx), None)
+            if not blob_info:
+                print(f"No blob found for Index Count String {idx}")
+
             # Apply SAHI if enabled
-            if use_sahi and len(det) > 0:
+            if use_sahi and (len(det) == 0 or blob_info) :
                 # Get initial detections
                 initial_detections = []
                 for *xyxy, conf, cls in det:
@@ -257,6 +274,21 @@ def run(
                     for det in initial_detections:
                         x1, y1, x2, y2, conf, cls = det
                         roi = [x1, y1, x2, y2]
+                        custom_rois.append(resize_with_letterbox_bbox(roi, (shape[0], shape[1]), (960, 960)))
+
+                if blob_info:
+                    for contour in blob_info.get("Contours", []):
+                        top = int(float(contour["Top"]))
+                        bottom = int(float(contour["Bottom"]))
+                        left = int(float(contour["Left"]))
+                        right = int(float(contour["Right"]))
+                        x_min = min(left, right)
+                        x_max = max(left, right)
+                        y_min = min(top, bottom)
+                        y_max = max(top, bottom)
+                        roi = [x_min, y_min, x_max, y_max]
+                        if (x_max - x_min) * (y_max - y_min) <= 1.0:
+                            continue
                         custom_rois.append(resize_with_letterbox_bbox(roi, (shape[0], shape[1]), (960, 960)))
 
                 # Get SAHI predictions
@@ -311,17 +343,12 @@ def run(
                         if conf < cls_thres:
                             mask[i] = False
                     det = det[mask]
-
-                # Keep only top 3 detections per class
-                top_detections = []
-                for cls in det[:, 5].unique():
-                    cls_mask = det[:, 5] == cls
-                    cls_detections = det[cls_mask]
-                    # Sort by confidence score in descending order
-                    sorted_indices = torch.argsort(cls_detections[:, 4], descending=True)
-                    # Take top 3 or all if less than 3
-                    top_n = min(1, len(cls_detections))
-                    top_detections.append(cls_detections[sorted_indices[:top_n]])
+                
+                # Sort by confidence score in descending order
+                sorted_indices = torch.argsort(det[:, 4], descending=True)
+                # Take top_k
+                top_n = min(top_k, len(det))
+                top_detections = det[sorted_indices[:top_n]]
                 
                 # Combine all top detections
                 if top_detections:
@@ -428,6 +455,8 @@ def parse_opt():
     parser.add_argument('--sahi-overlap-width-ratio', type=float, default=0.2, help='SAHI overlap width ratio')
     parser.add_argument('--sahi-blob-area-threshold', type=int, default=0, help='minimum blob area to consider for SAHI')
     parser.add_argument('--use-custom-rois', action='store_true', help='whether to use custom rois when performing SAHI')
+    parser.add_argument('--top-k', type=int, default=1, help='take top k predictions')
+    parser.add_argument('--blob-defects-info', default=None, help="blob defect information json file")
     opt = parser.parse_args()
     opt.imgsz *= 2 if len(opt.imgsz) == 1 else 1  # expand
 

@@ -10,6 +10,7 @@ from tqdm import tqdm
 import cv2
 from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
+import json
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLO root directory
@@ -190,6 +191,8 @@ def run(
         sahi_overlap_width_ratio=0.2,  # SAHI overlap width ratio
         sahi_blob_area_threshold=0,  # minimum blob area to consider for SAHI
         use_custom_rois=False,
+        top_k=1,
+        blob_defects_info=None,
 ):
     image_ids = []
     # Initialize/load model and set device
@@ -233,6 +236,10 @@ def run(
                 device=device,
                 category_mapping=category_mapping,
             )
+
+        if blob_defects_info:
+            with open(blob_defects_info, "r") as f:
+                blob_data = json.load(f)
 
         # Data
         data = check_dataset(data)  # check
@@ -318,15 +325,18 @@ def run(
             correct = torch.zeros(npr, niou, dtype=torch.bool, device=device)  # init
             seen += 1
 
-            if npr == 0:
-                if nl:
-                    stats.append((correct, *torch.zeros((2, 0), device=device), labels[:, 0]))
-                    if plots:
-                        confusion_matrix.process_batch(detections=None, labels=labels[:, 0])
+            # Blob Data
+            if not path.name.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff')):
                 continue
 
+            idx = path.name
+            # Find the corresponding blob in the JSON data
+            blob_info = next((b for b in blob_data.get("Blobs", []) if b.get("Index Count String") == idx), None)
+            if not blob_info:
+                print(f"No blob found for Index Count String {idx}")
+            
             # Apply SAHI if enabled
-            if use_sahi and len(pred) > 0:
+            if use_sahi and (len(pred) == 0 or blob_info):
                 # Get initial detections
                 initial_detections = []
                 for *xyxy, conf, cls in pred:
@@ -350,6 +360,21 @@ def run(
                     for det in initial_detections:
                         x1, y1, x2, y2, conf, cls = det
                         roi = [x1, y1, x2, y2]
+                        custom_rois.append(resize_with_letterbox_bbox(roi, (letterbox_shape[0], letterbox_shape[1]), (960, 960)))
+                
+                if blob_info:
+                    for contour in blob_info.get("Contours", []):
+                        top = int(float(contour["Top"]))
+                        bottom = int(float(contour["Bottom"]))
+                        left = int(float(contour["Left"]))
+                        right = int(float(contour["Right"]))
+                        x_min = min(left, right)
+                        x_max = max(left, right)
+                        y_min = min(top, bottom)
+                        y_max = max(top, bottom)
+                        roi = [x_min, y_min, x_max, y_max]
+                        if (x_max - x_min) * (y_max - y_min) <= 1.0:
+                            continue
                         custom_rois.append(resize_with_letterbox_bbox(roi, (letterbox_shape[0], letterbox_shape[1]), (960, 960)))
 
                 # Get SAHI predictions
@@ -391,6 +416,15 @@ def run(
                     if len(pred.shape) == 1:
                         pred = pred.unsqueeze(0)
 
+            npr = pred.shape[0]
+            
+            if npr == 0:
+                if nl:
+                    stats.append((correct, *torch.zeros((2, 0), device=device), labels[:, 0]))
+                    if plots:
+                        confusion_matrix.process_batch(detections=None, labels=labels[:, 0])
+                continue
+
             # Apply class-specific confidence thresholds
             if class_conf_thres is not None:
                 mask = torch.ones(len(pred), dtype=torch.bool)
@@ -400,16 +434,12 @@ def run(
                         mask[i] = False
                 pred = pred[mask]
 
-            # Keep only top 1 detection per class
-            top_detections = []
-            for cls in pred[:, 5].unique():
-                cls_mask = pred[:, 5] == cls
-                cls_detections = pred[cls_mask]
-                # Sort by confidence score in descending order
-                sorted_indices = torch.argsort(cls_detections[:, 4], descending=True)
-                # Take top 1
-                top_n = min(1, len(cls_detections))
-                top_detections.append(cls_detections[sorted_indices[:top_n]])
+            # Sort by confidence score in descending order
+            sorted_indices = torch.argsort(pred[:, 4], descending=True)
+            # Take top_k
+            top_n = min(top_k, len(pred))
+            top_detections = pred[sorted_indices[:top_n]]
+
             
             # Combine all top detections
             if top_detections:
@@ -561,12 +591,13 @@ def parse_opt():
     parser.add_argument('--dnn', action='store_true', help='use OpenCV DNN for ONNX inference')
     parser.add_argument('--min-items', type=int, default=0, help='Experimental')
     parser.add_argument('--use-sahi', action='store_true', help='use SAHI for improved detection')
-    parser.add_argument('--sahi-slice-height', type=int, default=512, help='SAHI slice height')
-    parser.add_argument('--sahi-slice-width', type=int, default=512, help='SAHI slice width')
+    parser.add_argument('--sahi-slice-height', type=int, default=400, help='SAHI slice height')
+    parser.add_argument('--sahi-slice-width', type=int, default=400, help='SAHI slice width')
     parser.add_argument('--sahi-overlap-height-ratio', type=float, default=0.2, help='SAHI overlap height ratio')
     parser.add_argument('--sahi-overlap-width-ratio', type=float, default=0.2, help='SAHI overlap width ratio')
-    parser.add_argument('--sahi-blob-area-threshold', type=int, default=100, help='minimum blob area to consider for SAHI')
+    parser.add_argument('--sahi-blob-area-threshold', type=int, default=0, help='minimum blob area to consider for SAHI')
     parser.add_argument('--use-custom-rois', action='store_true', help='whether to use custom rois when performing SAHI')
+    parser.add_argument('--top-k', type=int, default=1, help='take top k predictions')
     opt = parser.parse_args()
     opt.data = check_yaml(opt.data)  # check YAML
     opt.save_json |= opt.data.endswith('coco.yaml')
