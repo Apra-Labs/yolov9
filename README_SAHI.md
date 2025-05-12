@@ -98,6 +98,81 @@ pip install torch
 pip install numpy
 ```
 
+## Training with train_dual.py
+
+### 1. Data Preparation
+- Organize your dataset in YOLO format:
+  ```
+  dataset/
+  ├── images/
+  │   ├── train/
+  │   └── val/
+  └── labels/
+      ├── train/
+      └── val/
+  ```
+- Create a dataset YAML file (e.g., `data.yaml`):
+  ```yaml
+  path: path/to/dataset
+  train: images/train
+  val: images/val
+  nc: number_of_classes
+  names: ['class1', 'class2', ...]
+  ```
+
+### 2. Training Configuration
+- Use `train_dual.py` for training:
+  ```bash
+  python train_dual.py \
+    --weights yolov9-c.pt \
+    --cfg models/detect/yolov9-c.yaml \
+    --data data.yaml \
+    --epochs 300 \
+    --batch-size 16 \
+    --img 640 \
+    --device 0
+  ```
+
+### 3. Key Features of train_dual.py
+- Dual training process for improved model performance
+- Support for both standard and SAHI-based validation
+- Enhanced data augmentation capabilities
+- Built-in support for transfer learning
+
+### 4. Training Parameters
+- `--weights`: Initial weights (use pretrained weights for transfer learning)
+- `--cfg`: Model configuration file
+- `--data`: Dataset configuration file
+- `--epochs`: Number of training epochs
+- `--batch-size`: Batch size (adjust based on GPU memory)
+- `--img`: Input image size
+- `--device`: Training device (CPU/GPU)
+
+### 5. Training Tips
+1. **Transfer Learning**
+   - Start with pretrained weights for better results
+   - Fine-tune on your specific dataset
+
+2. **Data Augmentation**
+   - Use built-in augmentations for better generalization
+   - Adjust augmentation parameters in `data/hyps/hyp.scratch-high.yaml`
+
+3. **Hyperparameter Tuning**
+   - Adjust learning rate based on dataset size
+   - Modify batch size according to GPU memory
+   - Tune augmentation parameters for your use case
+
+4. **Training Monitoring**
+   - Monitor training metrics in TensorBoard
+   - Check validation performance regularly
+   - Save best model weights
+
+### 6. Model Export
+After training, export your model:
+```bash
+python export.py --weights runs/train/exp/weights/best.pt --include torchscript onnx
+```
+
 ## Notes
 
 - SAHI is particularly useful for detecting small objects in large images
