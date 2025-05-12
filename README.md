@@ -137,6 +137,12 @@ python val.py --data data/coco.yaml --img 640 --batch 32 --conf 0.001 --iou 0.7 
 
 # evaluate gelan models
 # python val.py --data data/coco.yaml --img 640 --batch 32 --conf 0.001 --iou 0.7 --device 0 --weights './gelan-c.pt' --save-json --name gelan_c_640_val
+
+# evaluate yolov9 models with sahi
+# python val_dual_sahi.py --data train/train.yaml  --img 960 --device 0 --weights './yolov9-c.pt' --batch 32 --conf 0.001 --iou 0.7 --save-json --name yolov9_c_640_val --use-sahi --class-conf-thres "0:0.25,1:0.25,2:0.25,3:0.25,4:0.25,5:0.25,6:0.25,7:0.25,8:0.25,9:0.25,10:0.25"
+
+# evaluate yolov9 models with sahi and custom rois
+# python val_dual_sahi.py --data train/train.yaml  --img 960 --device 0 --weights './yolov9-c.pt' --batch 32 --conf 0.001 --iou 0.7 --save-json --name yolov9_c_640_val --use-sahi --class-conf-thres "0:0.25,1:0.25,2:0.25,3:0.25,4:0.25,5:0.25,6:0.25,7:0.25,8:0.25,9:0.25,10:0.25" --use-custom-rois
 ```
 
 You will get the results:
@@ -210,6 +216,12 @@ python detect.py --source './data/images/horses.jpg' --img 640 --device 0 --weig
 
 # inference gelan models
 # python detect.py --source './data/images/horses.jpg' --img 640 --device 0 --weights './gelan-c.pt' --name gelan_c_c_640_detect
+
+# inference yolov9 models with sahi
+# python detect_sahi.py --source './data/images/horses.jpg' --img 640 --device 0 --weights './yolov9-c.pt' --name gelan_c_c_640_detect --use-sahi --class-conf-thres "0:0.25,1:0.25,2:0.25,3:0.25,4:0.25,5:0.25,6:0.25,7:0.25,8:0.25,9:0.25,10:0.25"
+
+# inference yolov9 models with sahi and custom rois
+# python detect_sahi.py --source './data/images/horses.jpg' --img 640 --device 0 --weights './yolov9-c.pt' --name gelan_c_c_640_detect --use-sahi --class-conf-thres "0:0.25,1:0.25,2:0.25,3:0.25,4:0.25,5:0.25,6:0.25,7:0.25,8:0.25,9:0.25,10:0.25" --use-custom-rois
 ```
 
 

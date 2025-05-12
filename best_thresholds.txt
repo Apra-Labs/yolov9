@@ -1,0 +1,32 @@
+Evaluating thresholds:
+Class 0: 0.813
+Class 1: 0.379
+Class 2: 0.280
+Class 3: 0.141
+Class 4: 0.800
+Class 5: 0.221
+Class 6: 0.724
+Class 7: 0.192
+Class 8: 0.271
+Class 9: 0.198
+Class 10: 0.428
+YOLO 🚀 v0.1-110-ga8569fb Python-3.12.7 torch-2.6.0+cu124 CUDA:0 (NVIDIA GeForce RTX 3060 Laptop GPU, 5938MiB)
+
+Fusing layers... 
+yolov9-e summary: 839 layers, 68563234 parameters, 0 gradients, 240.8 GFLOPs
+val: Scanning /home/kushaljainapra/ws_kushal/ecs_training/yolov9/train/labels/val.cache... 694 images, 219 backgrounds, 0 corrupt: 100%|██████████| 694/694 00:00
+                 Class     Images  Instances          P          R      mAP50   mAP50-95: 100%|██████████| 694/694 00:33
+                   all        694        475       0.81      0.781      0.834      0.556
+                 crush        694         68          1      0.985      0.992      0.674
+                debris        694        166      0.888      0.958      0.947      0.618
+            debrishalo        694         20      0.677       0.65      0.672      0.359
+                  dust        694         11          1      0.182      0.591      0.441
+           hangingchad        694         74      0.875      0.757      0.828      0.532
+                  hole        694         33      0.681      0.879      0.834      0.406
+                streak        694         20        0.9        0.9      0.944      0.849
+              thinspot        694         77      0.664      0.714      0.701      0.363
+                  worm        694          6        0.6          1      0.995      0.765
+Speed: 0.3ms pre-process, 40.5ms inference, 0.8ms NMS per image at shape (1, 3, 960, 960)
+Results saved to runs/grid-search/yolov9_e_grid_search
+Metrics: P=0.810, R=0.781, mAP50=0.834, mAP=0.556, F1=0.795
+
