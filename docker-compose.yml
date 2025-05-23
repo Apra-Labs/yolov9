@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  yolov9:
+    image: nvcr.io/nvidia/pytorch:21.11-py3
+    container_name: yolov9
+    shm_size: 64g
+    volumes:
+      - ../:/yolov9  # Mounts current directory to /yolov9 in container
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    tty: true
+    stdin_open: true 
