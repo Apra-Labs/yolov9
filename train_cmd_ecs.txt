@@ -1,1 +1,48 @@
-python train_dual.py --workers 8 --device 0 --batch 3 --data ../training/data/train/data.yaml --img 960 --cfg models/detect/yolov9-e.yaml --weights yolov9-e.pt --name yolov9-e --hyp hyp.scratch-high.yaml --min-items 0 --epochs 1 --close-mosaic 15
+conda activate yolov9-gpl
+
+
+# New command
+python train_dual.py \
+    --workers 8 \
+    --device 0 \
+    --batch 2 \
+    --data ../training/data/train/data.yaml \
+    --img 960 \
+    --cfg models/detect/yolov9-e.yaml \
+    --weights yolov9-e.pt \
+    --name ecs_yolov9_curriculum \
+    --hyp data/hyps/hyp.ecs-high.yaml \
+    --min-items 0 \
+    --epochs 50 \
+    --close-mosaic 10 \
+    --patience 15 \
+    --optimizer AdamW \
+    --cos-lr \
+    --label-smoothing 0.0 \
+    --save-period 10
+
+# Cleaner (dont include the hyp from yaml file )
+conda activate yolov9-gpl
+python train_dual.py \
+    --workers 8 \
+    --device 0 \
+    --batch 2 \
+    --data ../training/data/train/data.yaml \
+    --img 960 \
+    --cfg models/detect/yolov9-e.yaml \
+    --weights yolov9-e.pt \
+    --name ecs_yolov9_curriculum \
+    --hyp data/hyps/hyp.ecs-high.yaml \
+    --min-items 0 \
+    --epochs 50 \
+    --close-mosaic 10 \
+    --patience 15 \
+    --optimizer AdamW \
+    --cos-lr \
+    --save-period 10
+
+python train_dual.py --workers 8 --device 0 --batch 2  --data ../training/data/train/data.yaml --img 960 --cfg models/detect/yolov9-e.yaml --weights yolov9-e.pt --name ecs_yolov9_curriculum --hyp data/hyps/hyp.ecs-high.yaml --min-items 0 --epochs 50 --close-mosaic 10 --patience 15
+
+# Original command
+
+python train_dual.py --workers 8 --device 0 --batch 1 --data ../training/data/train/data.yaml --img 960 --cfg models/detect/yolov9-e.yaml --weights yolov9-e.pt --name yolov9-e --hyp hyp.scratch-high.yaml --min-items 0 --epochs 1 --close-mosaic 15

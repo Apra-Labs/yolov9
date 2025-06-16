@@ -3,11 +3,11 @@ import yaml
 from collections import defaultdict
 
 # Load class names from YAML
-with open("train.yaml", "r") as stream:
+with open("../training/data/train/data.yaml", "r") as stream:
     data_yaml = yaml.safe_load(stream)
     class_names = data_yaml["names"]
 
-base_dir = "train"
+base_dir = "../training/data/train"
 label_dirs = [f"{base_dir}/labels/train", f"{base_dir}/labels/val", f"{base_dir}/labels/test"]
 image_dirs = [f"{base_dir}/images/train", f"{base_dir}/images/val", f"{base_dir}/images/test"]
 
@@ -50,7 +50,7 @@ with open("dataset_info.txt", "w") as f:
         ["images/train", "images/val", "images/test", "labels/train", "labels/val", "labels/test"],
         image_counts + label_counts
     ):
-        f.write(f"├── {dir_name:<13} --> {count} files\n")
+        f.write(f"|--{dir_name:<13} --> {count} files\n")
     
     f.write("\nTotal Image Files:\n------------------\n")
     f.write(f"Train:     {image_counts[0]}\n")

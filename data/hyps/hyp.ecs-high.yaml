@@ -1,0 +1,52 @@
+# Learning rate parameters
+lr0: 0.001  # initial learning rate (AdamW=1E-3)
+lrf: 0.01  # final OneCycleLR learning rate (lr0 * lrf)
+momentum: 0.9  # AdamW beta1
+beta2: 0.999  # AdamW beta2
+weight_decay: 0.0005  # optimizer weight decay 5e-4
+
+# Warmup parameters
+warmup_epochs: 2.0  # reduced warmup for 50 epochs
+warmup_momentum: 0.8  # warmup initial momentum
+warmup_bias_lr: 0.1  # warmup initial bias lr
+
+# Loss weights - adjusted for imbalanced classes
+box: 7.5  # box loss gain
+cls: 0.5  # cls loss gain
+cls_pw: 1.0  # cls BCELoss positive_weight (will be increased during training)
+obj: 0.7  # obj loss gain (scale with pixels)
+obj_pw: 1.0  # obj BCELoss positive_weight
+dfl: 1.5  # dfl loss gain
+
+# Training thresholds
+iou_t: 0.20  # IoU training threshold
+anchor_t: 5.0  # anchor-multiple threshold
+# anchors: 3  # anchors per output layer (0 to ignore)
+
+# Focal loss - enabled for imbalanced classes
+fl_gamma: 1.5  # focal loss gamma (efficientDet default gamma=1.5)
+
+# Color augmentations - moderate to prevent over-augmentation
+hsv_h: 0.015  # image HSV-Hue augmentation (fraction)
+hsv_s: 0.7  # image HSV-Saturation augmentation (fraction)
+hsv_v: 0.4  # image HSV-Value augmentation (fraction)
+
+# Geometric augmentations - increased for rare classes
+degrees: 15.0  # image rotation (+/- deg)
+translate: 0.2  # image translation (+/- fraction)
+scale: 0.5  # image scale (+/- gain)
+shear: 0.0  # image shear (+/- deg)
+perspective: 0.0  # image perspective (+/- fraction), range 0-0.001
+flipud: 0.5  # image flip up-down (probability)
+fliplr: 0.5  # image flip left-right (probability)
+
+# Advanced augmentations - adjusted for curriculum learning
+mosaic: 1.0  # image mosaic (probability)
+mixup: 0.3  # image mixup (probability) - increased from 0.15
+copy_paste: 0.3  # segment copy-paste (probability)
+
+# Curriculum learning parameters
+curriculum_start_epoch: 10  # Start focusing on difficult classes after 10 epochs
+curriculum_end_epoch: 40    # Maximum focus on difficult classes until epoch 40
+max_cls_pw: 2.0            # Maximum class positive weight
+min_cls_pw: 1.0            # Minimum class positive weight 

@@ -1,0 +1,65 @@
+YOLO Dataset Information
+========================
+
+Folder Structure:
+-----------------
+train/
+|--images/train  --> 18419 files
+|--images/val    --> 3925 files
+|--images/test   --> 3959 files
+|--labels/train  --> 18419 files
+|--labels/val    --> 3925 files
+|--labels/test   --> 3959 files
+
+Total Image Files:
+------------------
+Train:     18419
+Validation:3925
+Test:      3959
+Total:     26303
+
+Total Label Files:
+------------------
+Train:     18419
+Validation:3925
+Test:      3959
+Total:     26303
+
+Classes:
+--------
+Total number of classes: 12
+
+Class Names:
+- break
+- crush
+- debris
+- debrishalo
+- dust
+- edgecrack
+- hangingchad
+- hole
+- stickie
+- streak
+- thinspot
+- worm
+
+Label Format:
+-------------
+Each label file follows YOLO format:
+<class_id> <x_center> <y_center> <width> <height>
+(All values normalized to [0, 1])
+
+Class Distribution (by image count):
+------------------------------------
+break        : 24 images
+crush        : 2558 images
+debris       : 8726 images
+debrishalo   : 787 images
+dust         : 410 images
+edgecrack    : 39 images
+hangingchad  : 2896 images
+hole         : 1180 images
+stickie      : 8 images
+streak       : 552 images
+thinspot     : 2126 images
+worm         : 176 images
